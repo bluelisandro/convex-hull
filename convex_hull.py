@@ -80,6 +80,7 @@ def base_case_hull(points: List[Point]) -> List[Point]:
     """ Base case of the recursive algorithm.
     """
     # TODO: You need to implement this function.
+
     return points
 
 
@@ -89,6 +90,7 @@ def compute_hull(points: List[Point]) -> List[Point]:
     and returns only the points that are on the hull.
     """
     # TODO: Implement a correct computation of the convex hull
-    #  using the divide-and-conquer algorithm
+    #  using the divide-and-conquer algorithm.
+    
     # TODO: Document your Initialization, Maintenance and Termination invariants.
     return points
