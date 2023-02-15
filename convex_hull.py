@@ -6,7 +6,6 @@ from typing import Tuple
 EPSILON = sys.float_info.epsilon
 Point = Tuple[int, int]
 
-
 def y_intercept(p1: Point, p2: Point, x: int) -> float:
     """
     Given two points, p1 and p2, an x coordinate from a vertical line,
@@ -48,6 +47,8 @@ def is_counter_clockwise(a: Point, b: Point, c: Point) -> bool:
     returns True if and only if a,b,c represents a counter-clockwise sequence
     (subject to floating-point precision)
     """
+    # Given three points a,b,c, returns True if and only if a,b,c represents a counter-clockwise sequence (subject to floating-point precision)
+
     return triangle_area(a, b, c) > EPSILON
 
 
@@ -93,4 +94,17 @@ def compute_hull(points: List[Point]) -> List[Point]:
     #  using the divide-and-conquer algorithm.
     
     # TODO: Document your Initialization, Maintenance and Termination invariants.
+
+    # Sort points by X coordinate
+    points.sort(key=lambda p: p[0])
+
+    # Divide points into left and right halves to create vertical line
+    # Get median of points
+    median = len(points) // 2 # this probably should be two lists split in the middle, and passed in recursively
+
+    # Recursively compute hulls for left and right halves
+    
+    # Merge convex hulls
+    
+
     return points
