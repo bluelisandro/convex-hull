@@ -15,7 +15,7 @@ def collinear(points: List[Point]) -> bool:
     if len(points) <= 2:
         return True
     for i in range(1, len(points) - 1):
-        if not collinear(points[i - 1], points[i], points[i + 1]):
+        if not collinear([points[i - 1], points[i], points[i + 1]]):
             return False
     return True
 # def collinear(a: Point, b: Point, c: Point) -> bool:
@@ -84,6 +84,17 @@ def clockwise_sort(points: List[Point]):
     points.sort(key=angle)
     return
 
+def cross_product(point1: Point, point2: Point) -> float:
+    """
+    Given two points, computes and returns the cross product of the two points.
+    Note that this cross product will be negative if point1, point2 represents a clockwise sequence,
+    positive if it is counter-clockwise,
+    and zero if the points are collinear.
+    """
+    x1, y1 = point1
+    x2, y2 = point2
+    return (x1 * y2) - (x2 * y1)
+
 
 def base_case_hull(points: List[Point]) -> List[Point]:
     """ Base case of the recursive algorithm.
@@ -93,6 +104,7 @@ def base_case_hull(points: List[Point]) -> List[Point]:
     # combinations = itertools.combinations(points, 2)
 
     # Stores list of circular pairs of points as list of tuples
+    # Each pair represents a line segment
     # Example: [(1,2), (2,3), (3,1)] --> [ [(1, 2), (2, 3)], [(2, 3), (3, 1)], [(3, 1), (1, 2)] ]
     combinations = [(point1, point2) for point1, point2 in zip(points, points[1:]+points[:1])]
     # TODO Not sure if these sort of combinations are what we need
@@ -108,14 +120,16 @@ def base_case_hull(points: List[Point]) -> List[Point]:
             if cp < 0:
                 # Point 1 is on the hull
                 # Point 2 is not on the hull
-                pass
+                not_on_hull = points.index(point2)
+                points.pop(not_on_hull)
             elif cp > 0:
                 # Point 1 is not on the hull
                 # Point 2 is on the hull
-                pass
+                not_on_hull = points.index(point1)
+                points.pop(not_on_hull)
             else:
                 # Point 1 and Point 2 are collinear
-                pass
+                continue
     
     """ get the combination of points (this is your line segments)
         for every line segment:
@@ -137,6 +151,9 @@ def compute_hull(points: List[Point]) -> List[Point]:
     # TODO: Implement a correct computation of the convex hull
     #  using the divide-and-conquer algorithm
     # TODO: Document your Initialization, Maintenance and Termination invariants.
+
+    points.sort(key=lambda p: p[0])
+
     if len(points) > 5:
         if collinear(points):
             return points
@@ -148,4 +165,6 @@ def compute_hull(points: List[Point]) -> List[Point]:
             # Conquer
             return merge_hulls(left, right)
 
-    return points
+    else:
+        hull = base_case_hull(points)
+        return hull
