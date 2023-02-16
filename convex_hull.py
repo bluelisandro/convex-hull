@@ -2,29 +2,23 @@ import math
 import sys
 from typing import List
 from typing import Tuple
-import itertools # for combinations
+from itertools import combinations
 
 EPSILON = sys.float_info.epsilon
 Point = Tuple[int, int]
 
-# Checks if all points in list are collinear
-# Lisandro: I think that this is easier than having args of only 3 points, because we can give it a list with any number of points by passing in [a, b, ...]
-def collinear(points: List[Point]) -> bool:
-    """ Given a list of points, returns True if and only if all of those points are collinear.
+# Declare a global boolean variable to only sort list of points once
+# global_points_sorted = False
+
+##### ----- Helper Functions ----- #####
+
+def collinear(a: Point, b: Point, c: Point) -> bool:
     """
-    if len(points) <= 2:
-        return True
-    for i in range(1, len(points) - 1):
-        if not collinear(points[i - 1], points[i], points[i + 1]):
-            return False
-    return True
-# def collinear(a: Point, b: Point, c: Point) -> bool:
-#     """
-#     Given three points a,b,c,
-#     returns True if and only if a,b,c are collinear
-#     (subject to floating-point precision)
-#     """
-#     return abs(triangle_area(a, b, c)) <= EPSILON
+    Given three points a,b,c,
+    returns True if and only if a,b,c are collinear
+    (subject to floating-point precision)
+    """
+    return abs(triangle_area(a, b, c)) <= EPSILON
 
 def y_intercept(p1: Point, p2: Point, x: int) -> float:
     """
@@ -84,39 +78,39 @@ def clockwise_sort(points: List[Point]):
     points.sort(key=angle)
     return
 
+# Computes the cross product of two points
+def cross_product(p1, p2):
+    return p1[0] * p2[1] - p1[1] * p2[0]
 
-def base_case_hull(points: List[Point]) -> List[Point]:
-    """ Base case of the recursive algorithm.
-    """
+
+##### ----- Convex Hull Divide and Conquer Algorithm ----- #####
+
+# Given two convex hulls, hull1 and hull2, computes and returns the convex hull
+# that contains all points in both hull1 and hull2.
+def merge_hulls(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
+    pass
+
+# Computes convex hull of a set of points using brute force
+def base_case_hull(points: List[Point]) -> List[Point]:    
+     # Generate all possible combinations of 3 points from the list
+    triples = combinations(points, 3)
     
-    # Compute combination of points
-    # combinations = itertools.combinations(points, 2)
-
-    # Stores list of circular pairs of points as list of tuples
-    # Example: [(1,2), (2,3), (3,1)] --> [ [(1, 2), (2, 3)], [(2, 3), (3, 1)], [(3, 1), (1, 2)] ]
-    combinations = [(point1, point2) for point1, point2 in zip(points, points[1:]+points[:1])]
-    # TODO Not sure if these sort of combinations are what we need
-
-    for combination in combinations:
-        point1 = combination[0]
-        point2 = combination[1]
-        if collinear([point1, point2]):
-            continue
-        else:
-            # Compute cross product
-            cp = cross_product(point1, point2)
-            if cp < 0:
-                # Point 1 is on the hull
-                # Point 2 is not on the hull
-                pass
-            elif cp > 0:
-                # Point 1 is not on the hull
-                # Point 2 is on the hull
-                pass
-            else:
-                # Point 1 and Point 2 are collinear
-                pass
+    # Keep track of the points that are on the convex hull
+    # We use a set for constant time adding
+    convex_hull = set()
     
+    # Check each triple of points to see if they are in counterclockwise order
+    for triple in triples:
+        # Since triple is a tuple of the combination of 3 points, we can unpack it into 3 variables
+        p1, p2, p3 = triple
+        if is_counter_clockwise(p1, p2, p3):
+            convex_hull.add(p1)
+            convex_hull.add(p2)
+            convex_hull.add(p3)
+    
+    return list(convex_hull)
+    
+    # Psuedocode
     """ get the combination of points (this is your line segments)
         for every line segment:
         point1, point2 = x
@@ -126,26 +120,51 @@ def base_case_hull(points: List[Point]) -> List[Point]:
             check if the cp is <0, >0 or is 0
         if there was a line segment where there were no points on one side, then that segment is on the hull """
 
-    return points
-
-
+# Given a list of points, recursively computes the convex hull around those points,
+# and returns only the points that are on the hull.
 def compute_hull(points: List[Point]) -> List[Point]:
-    """
-    Given a list of points, computes the convex hull around those points
-    and returns only the points that are on the hull.
-    """
     # TODO: Implement a correct computation of the convex hull
     #  using the divide-and-conquer algorithm
     # TODO: Document your Initialization, Maintenance and Termination invariants.
-    if len(points) > 5:
-        if collinear(points):
-            return points
+
+    # Sort the set of points by their x-coordinate. 
+    # If two points have the same x-coordinate, sort them by their y-coordinate.
+    points.sort(key=lambda p: (p[0], p[1]))
+
+    # Base Case
+    # If there are only 5 or fewer points in the set, 
+    # compute the convex hull directly using a known algorithm (in our case, brute force)
+    if len(points) <= 5:
+        convex_hull = base_case_hull(points)
+
+    # Recursive Case
+    # Divide the set of points into two roughly equal-sized sets,
+    # then recursively compute the convex hull of each of the two sets using compute_hull()
+    else:
+        # If all points have same x-coordinate, return points as convex hull
+        if len(set(p[0] for p in points)) == 1:
+            convex_hull = points
         else:
             # Divide
             median = len(points) // 2
-            left = compute_hull(points[:median])
-            right = compute_hull(points[median:])
+            left_hull = compute_hull(points[:median])
+            right_hull = compute_hull(points[median:])
             # Conquer
-            return merge_hulls(left, right)
+            convex_hull = merge_hulls(left_hull, right_hull)
 
-    return points
+    return convex_hull
+
+# Convex Hull Divide and Conquer Psudeocode
+    # Sort the set of points by their x-coordinate. If two points have the same x-coordinate, sort them by their y-coordinate.
+
+    # Base Case: 
+    # If there are only 5 or fewer points in the set, 
+    # compute the convex hull directly using a known algorithm (in our case, brute force)
+
+    # Recursive Case: Divide the set of points into two roughly equal-sized sets,
+    # then recursively compute the convex hull of each of the two sets using compute_hull()
+
+    # Merge the two convex hulls to obtain the final convex hull. 
+    # This can be accomplished by connecting the rightmost point of the left convex hull 
+    # to the leftmost point of the right convex hull, and continuing in a counterclockwise 
+    # direction until the starting point is reached.
