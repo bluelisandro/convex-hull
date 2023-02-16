@@ -82,12 +82,45 @@ def clockwise_sort(points: List[Point]):
 def cross_product(p1, p2):
     return p1[0] * p2[1] - p1[1] * p2[0]
 
+def compute_y_intercept(line1, line2):
+    x1, y1 = line1[0]
+    x2, y2 = line1[1]
+    slope1 = (y2 - y1) / (x2 - x1)
+    y_intercept1 = y1 - slope1 * x1
+    
+    x3, y3 = line2[0]
+    x4, y4 = line2[1]
+    slope2 = (y4 - y3) / (x4 - x3)
+    y_intercept2 = y3 - slope2 * x3
+    
+    if y_intercept1 == y_intercept2:
+        return y_intercept1
+    else:
+        return None
+
 
 ##### ----- Convex Hull Divide and Conquer Algorithm ----- #####
 
 # Given two convex hulls, hull1 and hull2, computes and returns the convex hull
 # that contains all points in both hull1 and hull2.
 def merge_hulls(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
+    # Tim's Psuedocode
+    # store rightmost point of left hull
+    # store leftmost point of right hull
+    # store middle line of both hulls
+    # declare new leftmost var
+    # declare new rightmost var
+    # while leftmost != new leftmost AND rightmost != new rightmost:
+        # new_rightmost = rightmost
+        # new_leftmost = leftmost
+        # y_intercept = y intercept of leftmost, rightmost, and divding line
+        # while y intercept < y intercept of points[index of leftmost + 1], rightmost, dividing line
+            # leftmost = right_hull[index of leftmost + 1]
+            # y_intercept = y_intercept of leftmost, rightmost, dividing line
+        # while y intercept < y intercept of leftmost, points[index of rightmost], dividing line
+            # rightmost = left[index of rightmost - 1]
+            # y_intercept = y_intercept of leftmost, rightmost, dividing line
+    
     pass
 
 # Computes convex hull of a set of points using brute force
