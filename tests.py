@@ -11,11 +11,13 @@ from convex_hull import compute_hull
 from convex_hull import is_clockwise
 from convex_hull import is_counter_clockwise
 from convex_hull import y_intercept
+from convex_hull import merge_hulls
 
 
 class TestGivenFunctions(unittest.TestCase):
     """ This class checks simple cases for the given functions.
     """
+
     def test_y_intercept(self):
         p1 = (0, 0)
         p2 = (20, 40)
@@ -79,7 +81,8 @@ class TestComputeHull(unittest.TestCase):
 
     @given(st.lists(  # generate a list
         st.tuples(  # of 2-tuples
-            st.integers(min_value=0, max_value=100_000),  # of integers in the interval [0, 100_000]
+            # of integers in the interval [0, 100_000]
+            st.integers(min_value=0, max_value=100_000),
             st.integers(min_value=0, max_value=100_000),
         ),
         min_size=3,  # minimum length of list
@@ -93,3 +96,19 @@ class TestComputeHull(unittest.TestCase):
         hull = compute_hull(points)
         self.assertTrue(is_convex_hull(hull, points))
         return
+
+    def test_merge_hulls(self):
+        left_hull = [(0, 1), (1, 0), (1, 2), (2, 1)]
+        right_hull = [(3, 1), (4, 0), (4, 2), (5, 1)]
+        points = [(0, 1), (1, 0), (1, 2), (2, 1),
+                  (3, 1), (4, 0), (4, 2), (5, 1)]
+
+        should_be = [(0, 1), (1, 0), (1, 2), (4, 0), (4, 2), (5, 1)]
+
+        # merged_hull = merge_hulls(left_hull, right_hull)
+
+        assert (is_convex_hull(should_be, points))
+
+
+convex_hull_tests = TestComputeHull()
+convex_hull_tests.test_merge_hulls()
