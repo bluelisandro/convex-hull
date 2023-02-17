@@ -106,22 +106,41 @@ def compute_y_intercept(line1, line2):
 def merge_hulls(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
     # Tim's Psuedocode
     # store rightmost point of left hull
+    rightmost = max(left_hull, key=lambda p: p[0])[0]
+
     # store leftmost point of right hull
+    leftmost = min(right_hull, key=lambda p: p[0])[0]
+
     # store middle line of both hulls
+    dividing_line = [(rightmost, 0), (leftmost, 0)]
+
     # declare new leftmost var
+    curr_leftmost = None
     # declare new rightmost var
+    curr_rightmost = None
+
     # while leftmost != new leftmost AND rightmost != new rightmost:
+    while leftmost != curr_leftmost and rightmost != curr_rightmost:
         # new_rightmost = rightmost
+        curr_rightmost = rightmost
         # new_leftmost = leftmost
+        curr_leftmost = leftmost
         # y_intercept = y intercept of leftmost, rightmost, and divding line
+        y_intercept = compute_y_intercept(dividing_line, [(leftmost, 0), (rightmost, 0)])
         # while y intercept < y intercept of points[index of leftmost + 1], rightmost, dividing line
+        while y_intercept < compute_y_intercept(dividing_line, [(left_hull[left_hull.index(leftmost) + 1], 0), (rightmost, 0)]):
             # leftmost = right_hull[index of leftmost + 1]
+            leftmost = right_hull[right_hull.index(leftmost) + 1]
             # y_intercept = y_intercept of leftmost, rightmost, dividing line
+            y_intercept = compute_y_intercept([(leftmost, 0), (rightmost, 0)], dividing_line)
         # while y intercept < y intercept of leftmost, points[index of rightmost], dividing line
+        while y_intercept < compute_y_intercept([(left_hull[right_hull[right_hull.index(rightmost) - 1]], 0), (rightmost, 0)], dividing_line):
             # rightmost = left[index of rightmost - 1]
+            rightmost = left_hull[left_hull.index(rightmost) - 1]
             # y_intercept = y_intercept of leftmost, rightmost, dividing line
+            y_intercept = compute_y_intercept([(leftmost, 0), (rightmost, 0)], dividing_line)
     
-    pass
+    return left_hull[left_hull.index(leftmost):left_hull.index(rightmost) + 1] + right_hull[right_hull.index(rightmost):right_hull.index(leftmost) + 1]
 
 # Computes convex hull of a set of points using brute force
 def base_case_hull(points: List[Point]) -> List[Point]:    
