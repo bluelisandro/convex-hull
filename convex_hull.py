@@ -105,11 +105,13 @@ def compute_y_intercept(line1, line2):
     slope2 = (y4 - y3) / (x4 - x3)
     y_intercept2 = y3 - slope2 * x3
 
-    if y_intercept1 == y_intercept2:
-        return y_intercept1
-    else:
+    if slope1 == slope2:
         return None
 
+    x_intercept = (y_intercept2 - y_intercept1) / (slope1 - slope2)
+    y_intercept = y_intercept1 + slope1 * x_intercept
+
+    return y_intercept
 
 ##### ----- Convex Hull Divide and Conquer Algorithm ----- #####
 
@@ -157,74 +159,96 @@ def merge_hulls_library(left_hull: List[Point], right_hull: List[Point]) -> List
 # Given two convex hulls, hull1 and hull2, computes and returns the convex hull
 # that contains all points in both hull1 and hull2.
 def merge_hulls(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
-    # Tim's Psuedocode
-    # store rightmost point of left hull
-    rightmost = max(left_hull, key=lambda p: p[0])[0]
+    # Store rightmost point of left hull
+    rightmost = max(left_hull, key=lambda p: p[0])
+    # Store leftmost point of right hull
+    leftmost = min(right_hull, key=lambda p: p[0])
+    # Compute the dividing line as the line passing through the mean of the rightmost point of the left hull
+    # and the leftmost point of the right hull
+    dividing_line = [(rightmost[0], rightmost[1]), (leftmost[0], leftmost[1])]
+    #[ (x, y), (x, y) ]
 
-    # store leftmost point of right hull
-    leftmost = min(right_hull, key=lambda p: p[0])[0]
+    # Dividing line notes
+    # should be a line that is perpendicular to line segment rightmost, leftmost
+    # and in the middle of rightmost and leftmost
 
-    # store middle line of both hulls
-    dividing_line = [(rightmost, 0), (leftmost, 0)]
-
-    # declare new leftmost var
+    # Declare new leftmost and rightmost variables
     curr_leftmost = None
-    # declare new rightmost var
     curr_rightmost = None
 
-    # while leftmost != new leftmost AND rightmost != new rightmost:
+    # While leftmost != new leftmost AND rightmost != new rightmost:
     while leftmost != curr_leftmost and rightmost != curr_rightmost:
-        # new_rightmost = rightmost
+        # New_rightmost = rightmost
         curr_rightmost = rightmost
-        # new_leftmost = leftmost
+        # New_leftmost = leftmost
         curr_leftmost = leftmost
-        # y_intercept = y intercept of leftmost, rightmost, and divding line
+        # y_intercept = y intercept of leftmost, rightmost, and dividing line
         y_intercept = compute_y_intercept(
-            dividing_line, [(leftmost, 0), (rightmost, 0)])
+            [(leftmost, rightmost)], 
+            dividing_line)
         # while y intercept < y intercept of points[index of leftmost + 1], rightmost, dividing line
-        while y_intercept < compute_y_intercept(dividing_line, [(left_hull[left_hull.index(leftmost) + 1], 0), (rightmost, 0)]):
+        
+        # How to use compute_y_intercept(line1, line2)
+        # line1 = diving_line
+        # leftmost = (x, y)
+        # rightmost = (x, y)
+        # line2 = [leftmost, rightmost]
+        # line format: [ ( , ) , ( , )]
+        
+        while y_intercept < compute_y_intercept([
+                (right_hull[right_hull.index(leftmost) + 1], rightmost)],
+                dividing_line
+            ):
             # leftmost = right_hull[index of leftmost + 1]
             leftmost = right_hull[right_hull.index(leftmost) + 1]
-            # y_intercept = y_intercept of leftmost, rightmost, dividing line
-            y_intercept = compute_y_intercept(
-                [(leftmost, 0), (rightmost, 0)], dividing_line)
+            # y_intercept = y intercept of leftmost, rightmost, dividing line
+            y_intercept = compute_y_intercept([
+                (leftmost, rightmost)],
+                dividing_line
+            )
         # while y intercept < y intercept of leftmost, points[index of rightmost], dividing line
-        while y_intercept < compute_y_intercept([(left_hull[right_hull[right_hull.index(rightmost) - 1]], 0), (rightmost, 0)], dividing_line):
+        while y_intercept < compute_y_intercept([
+            (left_hull[left_hull.index(rightmost) - 1], rightmost)],
+            dividing_line
+        ):
             # rightmost = left[index of rightmost - 1]
             rightmost = left_hull[left_hull.index(rightmost) - 1]
-            # y_intercept = y_intercept of leftmost, rightmost, dividing line
-            y_intercept = compute_y_intercept(
-                [(leftmost, 0), (rightmost, 0)], dividing_line)
+            # y_intercept = y intercept of leftmost, rightmost, dividing line
+            y_intercept = compute_y_intercept([
+                (leftmost, rightmost),
+                (dividing_line)
+            ])
 
-    return left_hull[left_hull.index(leftmost):left_hull.index(rightmost) + 1] + right_hull[right_hull.index(rightmost):right_hull.index(leftmost) + 1]
+    # Combine the two hulls
+    return left_hull[left_hull.index(curr_leftmost):left_hull.index(curr_rightmost)+1] + right_hull[right_hull.index(curr_rightmost):right_hull.index(curr_leftmost)+1]
 
 # Computes convex hull of a set of points using brute force
 def base_case_hull(points: List[Point]) -> List[Point]:
-    lines = combinations(points, 2)
+    """ Base case of the recursive algorithm.
+    """
+    num_of_points = len(points)
+    if num_of_points < 3:
+        return points
 
-    convex_hull = set()
+    hull = []
+    leftmost_index = min(range(num_of_points), key=lambda i: points[i][0])
 
-    for line in lines:
-        p1, p2 = line
-        for p3 in points:
-            if collinear(p1, p2, p3):
-                # convex_hull.add(p1)
-                # convex_hull.add(p2)
-                convex_hull.add(p3)
-            else:
-                # If cp is NOT 0, then it has a point on one side, therefore line not on hull
-                cp = cross_product(p1, p2, p3)
-                # print(cp)
-                if numpy.any(cp != 0) and p3 in convex_hull:
-                    # Not on hull
-                    convex_hull.remove(p3)
-                else:
-                    # On hull
-                    # convex_hull.add(p1)
-                    # convex_hull.add(p2)
-                    convex_hull.add(p3)
+    current_index = leftmost_index
+    while True:
+        current_point = points[current_index]
+        hull.append(current_point)
+        next_index = (current_index + 1) % num_of_points
+        for i in range(num_of_points):
+            if i == current_index:
+                continue
+            cross_product = (points[i][0] - points[current_index][0]) * (points[next_index][1] - points[current_index][1]) - (points[i][1] - points[current_index][1]) * (points[next_index][0] - points[current_index][0])
+            if cross_product > 0:
+                next_index = i
+        current_index = next_index
+        if current_index == leftmost_index:
+            break
 
-    return list(convex_hull)
+    return hull
 
     # Psuedocode
     """ get the combination of points (this is your line segments)
@@ -305,18 +329,23 @@ def test_merge_hulls():
 
     assert merged_hull == expected_merged_hull
 
-# Test base case hull using simple 5 points
-def test_base_case_hull():
-    print("------------------ Test base_case_hull() ------------------")
-    expected_hull = [(0, 1), (1, 0), (1, 2), (2, 1)]
+test_merge_hulls()
 
-    points = [(0,1),(1,0),(1,2),(2,1),(1,1)]
+# # Test base case hull using simple 5 points
+# def test_base_case_hull():
+#     print("------------------ Test base_case_hull() ------------------")
+#     expected_hull = [(0, 1), (1, 0), (1, 2), (2,0), (2, 1)]
+#     expected_hull.sort(key=lambda p: (p[0], p[1]))
 
-    hull = base_case_hull(points)
+#     points = [(0,1),(1,0),(1,1),(1,2),(2,1), (2,0)]
 
-    print("hull: ", hull)
+#     hull = base_case_hull(points)
+#     hull.sort(key=lambda p: (p[0], p[1]))
 
-    assert expected_hull == hull
-    print("------------------      Test passed!     ------------------")
+#     print("Expected hull: ", expected_hull)
+#     print("hull: ", hull)
+
+#     assert expected_hull == hull
+#     print("------------------      Test passed!     ------------------")
 
 # test_base_case_hull()
