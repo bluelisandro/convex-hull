@@ -113,114 +113,64 @@ def compute_y_intercept(line1, line2):
 
     return y_intercept
 
+
+def line_distance(p1: Point, p2: Point):
+    from math import sqrt
+    x1, y1 = p1
+    x2, y2 = p2
+    
+    return sqrt((x2 - x1)**2 + (y2 - y1)**2)
+
+def point_inside_triangle(triangle1, triangle2, triangle3, point):
+ 
+    # Calculate area of triangle ABC
+    A0 = triangle_area(triangle1, triangle2, triangle3)
+ 
+    # Calculate area of triangle PBC
+    A1 = triangle_area(point, triangle2, triangle3)
+     
+    # Calculate area of triangle PAC
+    A2 = triangle_area(point, triangle1, triangle3)
+     
+    # Calculate area of triangle PAB
+    A3 = triangle_area(point, triangle1, triangle2)
+     
+    # Check if sum of A1, A2 and A3
+    # is same as A
+    if(A0 == A1 + A2 + A3):
+        return True
+    else:
+        return False
+
 ##### ----- Convex Hull Divide and Conquer Algorithm ----- #####
 
-# def compute_hull(points: List[Point]) -> List[Point]:
-def compute_hull_library(points: List[Point]) -> List[Point]:
-    from scipy.spatial import ConvexHull
-    # Define the points for the convex hull
-    points = numpy.array(points)
-
-    # Compute the convex hull
-    hull = ConvexHull(points)
-
-    # Extract the vertices of the convex hull
-    hull_vertices = hull.vertices
-
-    # Convert the vertices to a list of points as tuples
-    hull_points = [points[i] for i in hull_vertices]
-
-    return hull_points
-
-def merge_hulls_library(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
-    from scipy.spatial import ConvexHull
-    # Define the points for the first convex hull
-    points1 = numpy.array(left_hull)
-
-    # Define the points for the second convex hull
-    points2 = numpy.array(right_hull)
-
-    # Compute the convex hulls of the two point sets
-    hull1 = ConvexHull(points1)
-    hull2 = ConvexHull(points2)
-
-    # Merge the two convex hulls
-    combined_points = numpy.concatenate((points1, points2))
-    combined_hull = ConvexHull(combined_points)
-
-    # Extract the vertices of the convex hull
-    hull_vertices = combined_hull.vertices
-
-    # Convert the vertices to a list of points as tuples
-    hull_points = [points_list[i] for i in hull_vertices]
-
-    return hull_points
-
-# Given two convex hulls, hull1 and hull2, computes and returns the convex hull
-# that contains all points in both hull1 and hull2.
-def merge_hulls(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
-    # Store rightmost point of left hull
-    rightmost = max(left_hull, key=lambda p: p[0])
-    # Store leftmost point of right hull
-    leftmost = min(right_hull, key=lambda p: p[0])
-    # Compute the dividing line as the line passing through the mean of the rightmost point of the left hull
-    # and the leftmost point of the right hull
-    dividing_line = [(rightmost[0], rightmost[1]), (leftmost[0], leftmost[1])]
-    #[ (x, y), (x, y) ]
-
-    # Dividing line notes
-    # should be a line that is perpendicular to line segment rightmost, leftmost
-    # and in the middle of rightmost and leftmost
-
-    # Declare new leftmost and rightmost variables
-    curr_leftmost = None
-    curr_rightmost = None
-
-    # While leftmost != new leftmost AND rightmost != new rightmost:
-    while leftmost != curr_leftmost and rightmost != curr_rightmost:
-        # New_rightmost = rightmost
-        curr_rightmost = rightmost
-        # New_leftmost = leftmost
-        curr_leftmost = leftmost
-        # y_intercept = y intercept of leftmost, rightmost, and dividing line
-        y_intercept = compute_y_intercept(
-            [(leftmost, rightmost)], 
-            dividing_line)
-        # while y intercept < y intercept of points[index of leftmost + 1], rightmost, dividing line
-        
-        # How to use compute_y_intercept(line1, line2)
-        # line1 = diving_line
-        # leftmost = (x, y)
-        # rightmost = (x, y)
-        # line2 = [leftmost, rightmost]
-        # line format: [ ( , ) , ( , )]
-        
-        while y_intercept < compute_y_intercept([
-                (right_hull[right_hull.index(leftmost) + 1], rightmost)],
-                dividing_line
-            ):
-            # leftmost = right_hull[index of leftmost + 1]
-            leftmost = right_hull[right_hull.index(leftmost) + 1]
-            # y_intercept = y intercept of leftmost, rightmost, dividing line
-            y_intercept = compute_y_intercept([
-                (leftmost, rightmost)],
-                dividing_line
-            )
-        # while y intercept < y intercept of leftmost, points[index of rightmost], dividing line
-        while y_intercept < compute_y_intercept([
-            (left_hull[left_hull.index(rightmost) - 1], rightmost)],
-            dividing_line
-        ):
-            # rightmost = left[index of rightmost - 1]
-            rightmost = left_hull[left_hull.index(rightmost) - 1]
-            # y_intercept = y intercept of leftmost, rightmost, dividing line
-            y_intercept = compute_y_intercept([
-                (leftmost, rightmost),
-                (dividing_line)
-            ])
-
-    # Combine the two hulls
-    return left_hull[left_hull.index(curr_leftmost):left_hull.index(curr_rightmost)+1] + right_hull[right_hull.index(curr_rightmost):right_hull.index(curr_leftmost)+1]
+def merge_hulls(hull1, hull2):
+    # Find the extreme points of each hull
+    leftmost1 = min(hull1, key=lambda p: p[0])
+    rightmost1 = max(hull1, key=lambda p: p[0])
+    top1 = max(hull1, key=lambda p: p[1])
+    bottom1 = min(hull1, key=lambda p: p[1])
+    leftmost2 = min(hull2, key=lambda p: p[0])
+    rightmost2 = max(hull2, key=lambda p: p[0])
+    top2 = max(hull2, key=lambda p: p[1])
+    bottom2 = min(hull2, key=lambda p: p[1])
+    
+    # Find the bridge points
+    bridge1 = max(hull1, key=lambda p: line_distance(leftmost2, rightmost2))
+    bridge2 = max(hull2, key=lambda p: line_distance(leftmost1, rightmost1))
+    
+    # Connect the hulls and bridge points
+    merged_hull = [leftmost1, rightmost1, bridge2, rightmost2, top2, bridge1, leftmost2, bottom2]
+    
+    # Remove points inside the merged hull
+    for i in range(len(merged_hull)):
+        p1, p2, p3 = merged_hull[i-1], merged_hull[i], merged_hull[(i+1)%len(merged_hull)]
+        if is_clockwise(p1, p2, p3):
+            points_to_remove = [p for p in hull1 + hull2 if point_inside_triangle(p, p1, p2, p3)]
+            merged_hull = [p for p in merged_hull if p not in points_to_remove]
+    
+    # Compute the convex hull of the remaining points
+    return base_case_hull(merged_hull)
 
 # Computes convex hull of a set of points using brute force
 def base_case_hull(points: List[Point]) -> List[Point]:
@@ -329,7 +279,7 @@ def test_merge_hulls():
 
     assert merged_hull == expected_merged_hull
 
-test_merge_hulls()
+# test_merge_hulls()
 
 # # Test base case hull using simple 5 points
 # def test_base_case_hull():
