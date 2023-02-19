@@ -36,38 +36,41 @@ def run_benchmarks():
     #  and record the time it takes on inputs of different sizes.
     # TODO: Plot a graph of runtime vs input size. What can you infer from the shape?
 
-    sizes: List[int] = list(range(0, 10_000, 1_000))
+    sizes: List[int] = list(range(0, 1_100_000, 100_000))
     dnc_hull_times: List[float] = list()
     naive_hull_times: List[float] = list()
     for n in sizes:
         print(f'n: {n},', end=' ')
 
         points = generate_points(n)
+
         start_time = time.time()
-        # TODO: call compute_hull here
+        base_case_hull(points)
         time_taken = time.time() - start_time  # time taken (in seconds) for divide-and-conquer
 
-        print(f'dnc_time_taken: {time_taken:.3f},', end=' ')
+        print(f'dnc_time_taken: {time_taken:.3f}')
         dnc_hull_times.append(time_taken)
 
-        start_time = time.time()
-        # TODO: call base_case_hull here
-        time_taken = time.time() - start_time  # time taken (in seconds) for naive
+        # # base_case_hull
+        # start_time = time.time()
+        # base_case_hull(points)
+        # time_taken = time.time() - start_time  # time taken (in seconds) for naive
 
-        print(f'naive_time_taken: {time_taken:.3f}')
-        naive_hull_times.append(time_taken)
+        # print(f'naive_time_taken: {time_taken:.3f}')
+        # naive_hull_times.append(time_taken)
 
     plt.scatter(sizes, dnc_hull_times, c='blue')
-    plt.plot(sizes, dnc_hull_times, c='blue', label='add label here')
-    plt.scatter(sizes, naive_hull_times, c='red')
-    plt.plot(sizes, naive_hull_times, c='red', label='add label here')
+    plt.plot(sizes, dnc_hull_times, c='blue', label='Main Algorithm Hull Time Taken (s)')
+
+    # plt.scatter(sizes, naive_hull_times, c='red')
+    # plt.plot(sizes, naive_hull_times, c='red', label='Base Case Algorithm Hull Time Taken (s)')
+
     plt.legend()
-    plt.xlabel('add x-label here')
-    plt.ylabel('add y-label here')
-    plt.title('Add title here')
+    plt.xlabel('Number of Points')
+    plt.ylabel('Time Taken (s)')
+    plt.title('Time Taken vs Input Size')
     plt.savefig('benchmark_plot.png')
     return
-
 
 if __name__ == '__main__':
     run_benchmarks()
