@@ -94,25 +94,21 @@ def cross_product(p1, p2, p3):
 
     return cross_product
 
-def y_int(line1, line2):
-    x1, y1 = line1[0]
-    x2, y2 = line1[1]
-    slope1 = (y2 - y1) / (x2 - x1)
-    y_intercept1 = y1 - slope1 * x1
-
-    x3, y3 = line2[0]
-    x4, y4 = line2[1]
-    slope2 = (y4 - y3) / (x4 - x3)
-    y_intercept2 = y3 - slope2 * x3
-
-    if slope1 == slope2:
-        return None
-
-    x_intercept = (y_intercept2 - y_intercept1) / (slope1 - slope2)
-    y_intercept = y_intercept1 + slope1 * x_intercept
-
-    return y_intercept
+def y_int(point1, point2, dividing_line):
+       # Extract x and y values from the points
+    x1, y1 = point1
+    x2, y2 = point2
     
+    # Calculate the slope of the line passing through the two points
+    slope = (y2 - y1) / (x2 - x1)
+    
+    # Calculate the y-intercept of the line passing through the two points
+    y_intercept = y1 - slope * x1
+    
+    # Calculate the y-coordinate of the point where the line intersects the dividing line
+    y_coord = slope * dividing_line + y_intercept
+    
+    return y_coord
 
 ##### ----- Convex Hull Divide and Conquer Algorithm ----- #####
 
@@ -128,22 +124,65 @@ def merge_hulls_brute_force(left_hull: List[Point], right_hull: List[Point]) -> 
 
 def merge_hulls(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
     # Store rightmost point of left hull
-    A = max(left_hull, key=lambda p: p[0])
+    rightmost = max(left_hull, key=lambda p: p[0])
 
     # Store leftmost point of right hull
-    B = min(right_hull, key=lambda p: p[0])
+    leftmost = min(right_hull, key=lambda p: p[0])
 
     # Find dividing line
     # Make point 1 lowest 
-    dividing_line = (A[0] + B[0]) / 2
+    dividing_line = (leftmost[0] + rightmost[0]) / 2
 
     # Find upper tangent
-    i = left_hull.index(rightmost)
-    j = right_hull.index(leftmost)
-    # while (y_int(line1, line2))
+    i = left_hull.index(rightmost) + 1
+    j = right_hull.index(leftmost) + 1
+    print(j)
+    while y_int(left_hull[i], right_hull[j+1], dividing_line) > y_int(left_hull[i], right_hull[j], dividing_line) or y_int(left_hull[i-1], right_hull[j], dividing_line) > y_int(left_hull[i], right_hull[j], dividing_line):
+        if y_int(left_hull[i], right_hull[j+1], dividing_line) > y_int(left_hull[i], right_hull[j], dividing_line):
+            j = (j + 1) % len(right_hull)
+        else:
+            i = (i - 1) % len(left_hull)
+
+    # Store upper tangent line points
+    upper_tangent_left = left_hull[i]
+    upper_tangent_right = right_hull[j]
 
     # Find lower tangent
+    k = left_hull.index(rightmost)
+    m = right_hull.index(leftmost)
+    while y_int(left_hull[k], right_hull[m+1], dividing_line) < y_int(left_hull[k], right_hull[m], dividing_line) or y_int(left_hull[k-1], right_hull[m], dividing_line) < y_int(left_hull[k], right_hull[m], dividing_line):
+        if y_int(left_hull[k], right_hull[m+1], dividing_line) < y_int(left_hull[k], right_hull[m], dividing_line):
+            m = (m + 1) % len(right_hull)
+        else:
+            k = (k - 1) % len(left_hull)
     
+    # Store lower tangent line segment as a tuple of two Points
+    lower_tangent_right = right_hull[m]
+    lower_tangent_left = left_hull[k]
+
+    # Traverse right_hull until we find lower_tangent right point
+    for point in right_hull:
+        if point == lower_tangent_right:
+            # Link lower_tangent_right to lower_tangent_left
+            # Remove all points between lower_tangent_right and upper_tangent_right
+            u = right_hull.index(upper_tangent_right) + 1
+            while u != right_hull.index(lower_tangent_right):
+                right_hull.pop(u)
+                u = (u - 1) % len(right_hull)
+            break
+
+    # Traverse left_hull until we find lower_tangent left point
+    for point in left_hull:
+        if point == lower_tangent_left:
+            # Remove all points between upper_tangent_left and lower_tangent_left
+            u = left_hull.index(upper_tangent_left) + 1
+            while u != left_hull.index(lower_tangent_left):
+                left_hull.pop(u)
+                u = (u + 1) % len(left_hull)
+            break
+
+    return left_hull + right_hull
+
 
 # Computes convex hull of a set of points using brute force
 def base_case_hull(points: List[Point]) -> List[Point]:
@@ -186,8 +225,6 @@ def base_case_hull(points: List[Point]) -> List[Point]:
 # Given a list of points, recursively computes the convex hull around those points,
 # and returns only the points that are on the hull.
 
-
-# def compute_hull2(points: List[Point]) -> List[Point]:
 def compute_hull(points: List[Point]) -> List[Point]:
     # TODO: Implement a correct computation of the convex hull
     #  using the divide-and-conquer algorithm
