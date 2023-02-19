@@ -131,18 +131,19 @@ def merge_hulls(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
 
     # Find dividing line
     # Make point 1 lowest 
-    dividing_line = (A[0] + B[0]) / 2
+    dividing_line = (leftmost[0] + rightmost[0]) / 2
 
     # Find upper tangent
-    i = left_hull.index(rightmost)
-    j = right_hull.index(leftmost)
+    i = left_hull.index(rightmost) + 1
+    j = right_hull.index(leftmost) + 1
+    print(j)
     while y_int(left_hull[i], right_hull[j+1], dividing_line) > y_int(left_hull[i], right_hull[j], dividing_line) or y_int(left_hull[i-1], right_hull[j], dividing_line) > y_int(left_hull[i], right_hull[j], dividing_line):
         if y_int(left_hull[i], right_hull[j+1], dividing_line) > y_int(left_hull[i], right_hull[j], dividing_line):
             j = (j + 1) % len(right_hull)
         else:
             i = (i - 1) % len(left_hull)
 
-    # Store upper tangent line segment as a tuple of two Points
+    # Store upper tangent line points
     upper_tangent_left = left_hull[i]
     upper_tangent_right = right_hull[j]
 
@@ -160,22 +161,27 @@ def merge_hulls(left_hull: List[Point], right_hull: List[Point]) -> List[Point]:
     lower_tangent_left = left_hull[k]
 
     # Traverse right_hull until we find lower_tangent right point
-    for points in right_hull:
-        if points == lower_tangent_right:
+    for point in right_hull:
+        if point == lower_tangent_right:
             # Link lower_tangent_right to lower_tangent_left
             # Remove all points between lower_tangent_right and upper_tangent_right
-            u = right_hull.index(upper_tangent_right)
+            u = right_hull.index(upper_tangent_right) + 1
             while u != right_hull.index(lower_tangent_right):
                 right_hull.pop(u)
-                u = (u + 1) % len(right_hull)
-
-
-
+                u = (u - 1) % len(right_hull)
+            break
 
     # Traverse left_hull until we find lower_tangent left point
-    for points in left_hull:
-        if points == lower_tangent_left:
+    for point in left_hull:
+        if point == lower_tangent_left:
             # Remove all points between upper_tangent_left and lower_tangent_left
+            u = left_hull.index(upper_tangent_left) + 1
+            while u != left_hull.index(lower_tangent_left):
+                left_hull.pop(u)
+                u = (u + 1) % len(left_hull)
+            break
+
+    return left_hull + right_hull
 
 
 # Computes convex hull of a set of points using brute force
